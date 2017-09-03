@@ -18,19 +18,12 @@ namespace :deploy do
   Rake::Task["deploy:compile_assets"].clear
 
   namespace :assets do
-
-    # desc "Remove manifest file from remote server"
-    # task :remove_manifest do
-    #   with rails_env: fetch(:assets_dir) do
-    #     execute "rm -f #{shared_path}/#{shared_assets_prefix}/manifest*"
-    #   end
-    # end
-
     desc "Remove all local precompiled assets"
     task :cleanup do
       run_locally do
         with rails_env: fetch(:precompile_env) do
           execute "rm -rf", fetch(:assets_dir)
+          execute "rm -rf", fetch(:packs_dir) unless packs_dir.nil?
         end
       end
     end
@@ -48,7 +41,7 @@ namespace :deploy do
     desc "Performs rsync to app servers"
     task :precompile do
       on roles(fetch(:assets_role)) do
-
+        puts 'Uploading `assets` dir'
         local_manifest_path = run_locally "ls #{assets_dir}/manifest*"
         local_manifest_path.strip!
 
@@ -57,6 +50,7 @@ namespace :deploy do
 
 
         unless packs_dir.nil?
+          puts 'Uploading `packs` dir'
           local_manifest_path = run_locally "ls #{packs_dir}/manifest*"
           local_manifest_path.strip!
 
