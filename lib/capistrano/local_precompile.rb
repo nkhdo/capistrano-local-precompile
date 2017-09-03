@@ -5,6 +5,7 @@ namespace :load do
     set :precompile_env,   fetch(:rails_env) || 'production'
     set :assets_dir,       "public/assets"
     set :rsync_cmd,        "rsync -av --delete"
+    set :packs_dir,        nil
 
     after "bundler:install", "deploy:assets:prepare"
     #before "deploy:assets:symlink", "deploy:assets:remove_manifest"
@@ -53,6 +54,15 @@ namespace :deploy do
 
         run_locally "#{fetch(:rsync_cmd)} ./#{fetch(:assets_dir)}/ #{user}@#{server}:#{release_path}/#{fetch(:assets_dir)}/"
         run_locally "#{fetch(:rsync_cmd)} ./#{local_manifest_path} #{user}@#{server}:#{release_path}/assets_manifest#{File.extname(local_manifest_path)}"
+
+
+        unless packs_dir.nil?
+          local_manifest_path = run_locally "ls #{packs_dir}/manifest*"
+          local_manifest_path.strip!
+
+          run_locally "#{fetch(:rsync_cmd)} ./#{fetch(:packs_dir)}/ #{user}@#{server}:#{release_path}/#{fetch(:packs_dir)}/"
+          run_locally "#{fetch(:rsync_cmd)} ./#{local_manifest_path} #{user}@#{server}:#{release_path}/assets_manifest#{File.extname(local_manifest_path)}"
+        end
       end
     end
   end
